@@ -1,5 +1,5 @@
 import { ArrowLeft, Copy, FileUp, Sparkles } from 'lucide-react'
-import React, { memo, useCallback, useRef, useState } from 'react'
+import React, { memo, useCallback, useLayoutEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { ScrollArea } from '@cherrystudio/ui'
@@ -12,7 +12,7 @@ import { DoctorAgentDialog } from '@renderer/components/doctor'
 import { updateCheckLabelKey, updateNoticeIsFailure, useAppUpdateCheck } from '@renderer/hooks/useAppUpdateCheck'
 import i18n from '@renderer/i18n/resolver'
 import { operationIncident, operationSubject } from '@renderer/services/AppErrorContextService'
-import { OFFICIAL_RELEASES_URL } from '@renderer/services/AppUpdateCheckService'
+import { appUpdateCheckService, OFFICIAL_RELEASES_URL } from '@renderer/services/AppUpdateCheckService'
 import { captureDiagnosticAiDiagnosis } from '@renderer/services/diagnosticAiSnapshot'
 import { openSettingsTab } from '@renderer/services/mainWindowNavigation'
 import { createPopup, POPUP_EXIT_MS, type PopupInjectedProps, popupService } from '@renderer/services/popup'
@@ -566,6 +566,10 @@ const ErrorDetailContent: React.FC<ErrorDetailContentInternalProps> = ({
   const [agentOpen, setAgentOpen] = useState(false)
   const viewDetailsButtonRef = useRef<HTMLButtonElement>(null)
   const shownError = technicalError(error, errorContext)
+  // The shared notice can be hours old; this dialog shows only results of checks made after it opened.
+  useLayoutEffect(() => {
+    appUpdateCheckService.setUpdateNotice(null)
+  }, [])
   const copyErrorDetails = useCallback(() => {
     if (!shownError) {
       return
